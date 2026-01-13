@@ -9,7 +9,7 @@ config.py             - Settings (gender terms, file paths)
 prepare_data.py       - Load data, split by author, remove duplicates
 masking.py            - Mask gender terms and nouns
 train_models.py       - Train 3 models on 3 settings
-qualitative.py        - Feature analysis (Bilgin's part)
+qualitative.py        - Feature analysis
 main.py               - Main script (runs everything)
 ```
 
