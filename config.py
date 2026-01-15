@@ -1,5 +1,5 @@
 # File paths
-DATA_FILE = "gender.csv"
+DATA_FILE = "spacy/gender.csv"
 
 # Data split
 TEST_SIZE = 0.3

@@ -17,8 +17,8 @@ def main():
     train_df, test_df = split_by_author(df)
     test_df = remove_near_duplicates(train_df, test_df)
 
-    # Step 2: Apply masking
-    print("\n### STEP 2: APPLY MASKING ###")
+    # Step 2: Apply noun removal using spaCy
+    print("\n### STEP 2: MASKING")
     train_df, test_df = apply_masking(train_df, test_df)
 
     # Step 3: Train and evaluate models
@@ -33,11 +33,11 @@ def main():
     print("COMPLETE!")
     print("=" * 80)
     print("\nOutput files:")
-    print("  - results.csv              (quantitative results)")
-    print("  - original_features.csv    (features before masking)")
-    print("  - masked_features.csv      (features after masking)")
-    print("  - feature_table.tex        (LaTeX table for paper)")
-    print("  - masking_analysis.csv     (detailed before/after comparison with feature scores)")
+    print("  - results.csv")
+    print("  - original_features.csv")
+    print("  - masked_features.csv")
+    print("  - masking_analysis.csv")
+    print("\nNote: All masking uses spaCy for POS tagging")
 
 
 if __name__ == "__main__":
