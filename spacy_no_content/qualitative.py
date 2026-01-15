@@ -10,14 +10,14 @@ def get_top_features_for_text(text, vectorizer, clf, top_n=5):
     vec = vectorizer.transform([text])
     feature_names = vectorizer.get_feature_names_out()
     coefs = clf.coef_[0]
-    
+
     # Get non-zero features in this text
     feature_indices = vec.nonzero()[1]
     feature_scores = [(feature_names[i], coefs[i] * vec[0, i]) for i in feature_indices]
-    
+
     # Sort by absolute contribution
     feature_scores.sort(key=lambda x: abs(x[1]), reverse=True)
-    
+
     return feature_scores[:top_n]
 
 
@@ -26,53 +26,53 @@ def create_masking_analysis_csv(train_df, test_df, original_pipe, masked_pipe, s
     print("\n" + "=" * 80)
     print("CREATING DETAILED MASKING ANALYSIS CSV")
     print("=" * 80)
-    
+
     # Sample test set for detailed analysis
     if len(test_df) > sample_size:
         test_sample = test_df.sample(sample_size, random_state=42).copy().reset_index(drop=True)
     else:
         test_sample = test_df.copy().reset_index(drop=True)
-    
+
     print(f"Analyzing {len(test_sample)} posts...")
-    
+
     # Get predictions
     original_preds = original_pipe.predict(test_sample["text"])
     masked_preds = masked_pipe.predict(test_sample["text_noun_masked"])
-    
+
     original_proba = original_pipe.predict_proba(test_sample["text"])
     masked_proba = masked_pipe.predict_proba(test_sample["text_noun_masked"])
-    
+
     # Extract vectorizers and classifiers
     vec_orig = original_pipe.named_steps["tfidf"]
     clf_orig = original_pipe.named_steps["clf"]
     vec_masked = masked_pipe.named_steps["tfidf"]
     clf_masked = masked_pipe.named_steps["clf"]
-    
+
     # Build analysis rows
     analysis_rows = []
-    
+
     for idx in range(len(test_sample)):
         row = test_sample.iloc[idx]
         true_label = "Female" if row["label"] == 1 else "Male"
-        
+
         # Original model
         orig_pred = "Female" if original_preds[idx] == 1 else "Male"
         orig_correct = (original_preds[idx] == row["label"])
         orig_conf = original_proba[idx][1] if original_preds[idx] == 1 else original_proba[idx][0]
-        
+
         # Masked model
         mask_pred = "Female" if masked_preds[idx] == 1 else "Male"
         mask_correct = (masked_preds[idx] == row["label"])
         mask_conf = masked_proba[idx][1] if masked_preds[idx] == 1 else masked_proba[idx][0]
-        
+
         # Get top features
         orig_features = get_top_features_for_text(row["text"], vec_orig, clf_orig, top_n=5)
         mask_features = get_top_features_for_text(row["text_noun_masked"], vec_masked, clf_masked, top_n=5)
-        
+
         # Format features as string
         orig_feat_str = ", ".join([f"{feat} ({score:+.2f})" for feat, score in orig_features])
         mask_feat_str = ", ".join([f"{feat} ({score:+.2f})" for feat, score in mask_features])
-        
+
         analysis_rows.append({
             "original_text": row["text"][:200],  # Truncate for readability
             "masked_text": row["text_noun_masked"][:200],
@@ -87,32 +87,32 @@ def create_masking_analysis_csv(train_df, test_df, original_pipe, masked_pipe, s
             "masked_top_features": mask_feat_str,
             "prediction_changed": (orig_pred != mask_pred)
         })
-    
+
     # Create DataFrame
     analysis_df = pd.DataFrame(analysis_rows)
-    
+
     # Save to CSV
     analysis_df.to_csv("masking_analysis.csv", index=False)
     print(f"Saved detailed analysis to masking_analysis.csv")
-    
+
     # Print summary statistics
     print("\n" + "=" * 80)
     print("MASKING ANALYSIS SUMMARY")
     print("=" * 80)
-    
+
     orig_acc = analysis_df["original_correct"].sum() / len(analysis_df)
     mask_acc = analysis_df["masked_correct"].sum() / len(analysis_df)
     changed = analysis_df["prediction_changed"].sum()
-    
+
     print(f"\nOriginal model accuracy: {orig_acc:.2%}")
     print(f"Masked model accuracy: {mask_acc:.2%}")
-    print(f"Predictions changed: {changed} ({changed/len(analysis_df):.1%})")
-    
+    print(f"Predictions changed: {changed} ({changed / len(analysis_df):.1%})")
+
     # Show interesting cases
     print("\n" + "=" * 80)
     print("INTERESTING CASES (Prediction Changed)")
     print("=" * 80)
-    
+
     changed_cases = analysis_df[analysis_df["prediction_changed"]].head(5)
     for i, row in changed_cases.iterrows():
         print(f"\nCase {i}:")
@@ -121,7 +121,111 @@ def create_masking_analysis_csv(train_df, test_df, original_pipe, masked_pipe, s
         print(f"  Original text: {row['original_text'][:100]}...")
         print(f"  Key original features: {row['original_top_features']}")
         print(f"  Key masked features: {row['masked_top_features']}")
-    
+
+    return analysis_df
+
+
+def create_leakage_analysis_csv(train_df, test_df, original_pipe, masked_pipe, sample_size=200):
+    """Create detailed CSV showing original vs masked predictions with feature scores"""
+    print("\n" + "=" * 80)
+    print("CREATING DETAILED LEAKAGE ANALYSIS CSV")
+    print("=" * 80)
+
+    # Sample test set for detailed analysis
+    if len(test_df) > sample_size:
+        test_sample = test_df.sample(sample_size, random_state=42).copy().reset_index(drop=True)
+    else:
+        test_sample = test_df.copy().reset_index(drop=True)
+
+    print(f"Analyzing {len(test_sample)} posts...")
+
+    # Get predictions
+    original_preds = original_pipe.predict(test_sample["text"])
+    masked_preds = masked_pipe.predict(test_sample["text_leakage_masked"])
+
+    original_proba = original_pipe.predict_proba(test_sample["text"])
+    masked_proba = masked_pipe.predict_proba(test_sample["text_leakage_masked"])
+
+    # Extract vectorizers and classifiers
+    vec_orig = original_pipe.named_steps["tfidf"]
+    clf_orig = original_pipe.named_steps["clf"]
+    vec_masked = masked_pipe.named_steps["tfidf"]
+    clf_masked = masked_pipe.named_steps["clf"]
+
+    # Build analysis rows
+    analysis_rows = []
+
+    for idx in range(len(test_sample)):
+        row = test_sample.iloc[idx]
+        true_label = "Female" if row["label"] == 1 else "Male"
+
+        # Original model
+        orig_pred = "Female" if original_preds[idx] == 1 else "Male"
+        orig_correct = (original_preds[idx] == row["label"])
+        orig_conf = original_proba[idx][1] if original_preds[idx] == 1 else original_proba[idx][0]
+
+        # Masked model
+        mask_pred = "Female" if masked_preds[idx] == 1 else "Male"
+        mask_correct = (masked_preds[idx] == row["label"])
+        mask_conf = masked_proba[idx][1] if masked_preds[idx] == 1 else masked_proba[idx][0]
+
+        # Get top features
+        orig_features = get_top_features_for_text(row["text"], vec_orig, clf_orig, top_n=5)
+        mask_features = get_top_features_for_text(row["text_noun_masked"], vec_masked, clf_masked, top_n=5)
+
+        # Format features as string
+        orig_feat_str = ", ".join([f"{feat} ({score:+.2f})" for feat, score in orig_features])
+        mask_feat_str = ", ".join([f"{feat} ({score:+.2f})" for feat, score in mask_features])
+
+        analysis_rows.append({
+            "original_text": row["text"][:200],  # Truncate for readability
+            "masked_text": row["text_noun_masked"][:200],
+            "true_label": true_label,
+            "original_prediction": orig_pred,
+            "original_correct": orig_correct,
+            "original_confidence": f"{orig_conf:.3f}",
+            "original_top_features": orig_feat_str,
+            "masked_prediction": mask_pred,
+            "masked_correct": mask_correct,
+            "masked_confidence": f"{mask_conf:.3f}",
+            "masked_top_features": mask_feat_str,
+            "prediction_changed": (orig_pred != mask_pred)
+        })
+
+    # Create DataFrame
+    analysis_df = pd.DataFrame(analysis_rows)
+
+    # Save to CSV
+    analysis_df.to_csv("masking_analysis.csv", index=False)
+    print(f"Saved detailed analysis to masking_analysis.csv")
+
+    # Print summary statistics
+    print("\n" + "=" * 80)
+    print("MASKING ANALYSIS SUMMARY")
+    print("=" * 80)
+
+    orig_acc = analysis_df["original_correct"].sum() / len(analysis_df)
+    mask_acc = analysis_df["masked_correct"].sum() / len(analysis_df)
+    changed = analysis_df["prediction_changed"].sum()
+
+    print(f"\nOriginal model accuracy: {orig_acc:.2%}")
+    print(f"Masked model accuracy: {mask_acc:.2%}")
+    print(f"Predictions changed: {changed} ({changed / len(analysis_df):.1%})")
+
+    # Show interesting cases
+    print("\n" + "=" * 80)
+    print("INTERESTING CASES (Prediction Changed)")
+    print("=" * 80)
+
+    changed_cases = analysis_df[analysis_df["prediction_changed"]].head(5)
+    for i, row in changed_cases.iterrows():
+        print(f"\nCase {i}:")
+        print(f"  True label: {row['true_label']}")
+        print(f"  Original → Masked: {row['original_prediction']} → {row['masked_prediction']}")
+        print(f"  Original text: {row['original_text'][:100]}...")
+        print(f"  Key original features: {row['original_top_features']}")
+        print(f"  Key masked features: {row['masked_top_features']}")
+
     return analysis_df
 
 
@@ -150,9 +254,10 @@ def analyze_features(train_df, test_df):
         ("clf", LogisticRegression(max_iter=1000))
     ])
     masked_pipe.fit(train_df["text_noun_masked"], train_df["label"])
-    
+
     # NEW: Create detailed masking analysis CSV
     create_masking_analysis_csv(train_df, test_df, original_pipe, masked_pipe, sample_size=200)
+    create_leakage_analysis_csv(train_df, test_df, original_pipe, masked_pipe, sample_size=200)
 
     # Extract features from ORIGINAL model
     vectorizer_orig = original_pipe.named_steps["tfidf"]

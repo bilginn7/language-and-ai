@@ -37,6 +37,7 @@ def main():
     print("  - original_features.csv    (features before masking)")
     print("  - masked_features.csv      (features after masking)")
     print("  - feature_table.tex        (LaTeX table for paper)")
+    print("  - masking_analysis.csv     (detailed before/after comparison with feature scores)")
 
 
 if __name__ == "__main__":
