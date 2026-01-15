@@ -78,8 +78,8 @@ def run_experiments(train_df, test_df):
         index="model", columns="setting", values="accuracy"))
 
     # Save
-    results_df.to_csv("results.csv", index=False)
-    print("\nResults saved to results.csv")
+    results_df.to_csv("results/results.csv", index=False)
+    print("\nResults saved to results/results.csv")
 
     return results_df
 

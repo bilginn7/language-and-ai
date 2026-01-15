@@ -7,9 +7,8 @@ from qualitative import analyze_features
 def main():
     """Run the complete pipeline"""
 
-    print("\n" + "=" * 80)
+
     print("REDDIT GENDER CLASSIFICATION PIPELINE")
-    print("=" * 80)
 
     # Step 1: Load and prepare data
     print("\n### STEP 1: LOAD DATA ###")
@@ -29,9 +28,7 @@ def main():
     print("\n### STEP 4: QUALITATIVE ANALYSIS ###")
     analyze_features(train_df, test_df)
 
-    print("\n" + "=" * 80)
     print("COMPLETE!")
-    print("=" * 80)
     print("\nOutput files:")
     print("  - results.csv")
     print("  - original_features.csv")

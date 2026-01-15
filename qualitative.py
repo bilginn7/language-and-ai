@@ -29,9 +29,9 @@ def create_masked_analysis_csv(
     sample_size=200,
     n_examples=5
 ):
-    print("\n" + "=" * 80)
+
     print(f"CREATING {output_name.upper()} ANALYSIS CSV")
-    print("=" * 80)
+
 
     if len(test_df) > sample_size:
         test_sample = test_df.sample(sample_size, random_state=42).reset_index(drop=True)
@@ -82,7 +82,7 @@ def create_masked_analysis_csv(
         })
 
     df = pd.DataFrame(rows)
-    df.to_csv(f"{output_name}_analysis.csv", index=False)
+    df.to_csv(f"results/{output_name}_analysis.csv", index=False)
 
 
     print(f"\n[{output_name.upper()} SUMMARY]")
@@ -93,9 +93,9 @@ def create_masked_analysis_csv(
 
     flipped = df[df["prediction_changed"]].head(n_examples)
 
-    print("\n" + "-" * 80)
+
     print(f"INTERESTING CASES – {output_name.upper()} (Prediction Changed)")
-    print("-" * 80)
+
 
     if len(flipped) == 0:
         print("No prediction changes found.")
@@ -118,9 +118,7 @@ def create_masked_analysis_csv(
 
 def analyze_features(train_df, test_df):
 
-    print("\n" + "=" * 80)
-    print("QUALITATIVE ANALYSIS – FEATURE IMPORTANCE")
-    print("=" * 80)
+    print("QUALITATIVE ANALYSIS: Running models on samples")
 
     original_pipe = Pipeline([
         ("tfidf", TfidfVectorizer(ngram_range=(1, 2), min_df=5, stop_words="english")),
@@ -177,10 +175,10 @@ def analyze_features(train_df, test_df):
     masked_female = [(feats_mask[i], coefs_mask[i]) for i in top_mask]
 
     pd.DataFrame(original_female, columns=["feature", "weight"]).to_csv(
-        "spacy/original_features.csv", index=False
+        "results/original_features.csv", index=False
     )
     pd.DataFrame(masked_female, columns=["feature", "weight"]).to_csv(
-        "spacy/masked_features.csv", index=False
+        "results/masked_features.csv", index=False
     )
 
 
