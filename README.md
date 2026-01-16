@@ -2,7 +2,7 @@
 
 This repository contains the **fully reproducible code** for the paper:
 
-> *Unmasking Style: Evaluating Text Distortion for Data Depollution in Reddit Author Profiling*
+> *Unmasking Style: Evaluating Text Distortion for Data Depollution in Reddit Author Profiling*.
 
 The goal of this project is to **quantitatively and qualitatively evaluate data pollution** in Reddit-based gender prediction, and to assess whether **stylometric signals remain predictive after masking label-aligned and topical content**.
 
