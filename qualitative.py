@@ -185,9 +185,4 @@ def analyze_features(train_df, test_df):
     orig_preds = original_pipe.predict(test_df["text"])
     mask_preds = masked_pipe.predict(test_df[masked_text_col])
 
-    print("\nERROR ANALYSIS")
-    print(f"Original errors: {(orig_preds != test_df['label']).sum()}")
-    print(f"Masked errors:   {(mask_preds != test_df['label']).sum()}")
-    print(f"Predictions changed: {(orig_preds != mask_preds).sum()}")
-
     print("\nDONE.")
