@@ -11,24 +11,23 @@ def main():
     print("REDDIT GENDER CLASSIFICATION PIPELINE")
 
     # Step 1: Load and prepare data
-    print("\n### STEP 1: LOAD DATA ###")
+    print("\nSTEP 1: LOAD DATA")
     df = load_data()
     train_df, test_df = split_by_author(df)
     test_df = remove_near_duplicates(train_df, test_df)
 
     # Step 2: Apply noun removal using spaCy
-    print("\n### STEP 2: MASKING")
+    print("\nSTEP 2: MASKING")
     train_df, test_df = apply_masking(train_df, test_df)
 
     # Step 3: Train and evaluate models
-    print("\n### STEP 3: TRAIN MODELS ###")
+    print("\nSTEP 3: TRAIN MODELS")
     results_df = run_experiments(train_df, test_df)
 
     # Step 4: Qualitative analysis (Bilgin's part)
-    print("\n### STEP 4: QUALITATIVE ANALYSIS ###")
+    print("\nSTEP 4: QUALITATIVE ANALYSIS")
     analyze_features(train_df, test_df)
 
-    print("COMPLETE!")
     print("\nOutput files:")
     print("  - results.csv")
     print("  - original_features.csv")

@@ -50,10 +50,6 @@ def apply_masking(train_df, test_df):
     - text_leakage_masked: Gender terms removed via lemmatization
     - text_noun_masked: All nouns removed via POS tagging
     """
-    print("\n" + "=" * 80)
-    print("TEXT MASKING USING SPACY")
-    print("=" * 80)
-
     # Leakage masking
     print("\n[1/4] Removing leakage terms from training set...")
     train_df.loc[:, "text_leakage_masked"] = mask_leakage_only(
@@ -75,8 +71,5 @@ def apply_masking(train_df, test_df):
     test_df.loc[:, "text_noun_masked"] = mask_all_nouns(
         test_df["text"].tolist()
     )
-
-    print("\n✓ Masking complete!")
-    print("=" * 80)
 
     return train_df, test_df

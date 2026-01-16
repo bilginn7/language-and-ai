@@ -6,6 +6,9 @@ from sklearn.linear_model import LogisticRegression
 
 
 def get_top_features_for_text(text, vectorizer, clf, top_n=5):
+    """
+    Return the most influential features for a single text prediction.
+    """
     vec = vectorizer.transform([text])
     feature_names = vectorizer.get_feature_names_out()
     coefs = clf.coef_[0]
@@ -29,7 +32,9 @@ def create_masked_analysis_csv(
     sample_size=200,
     n_examples=5
 ):
-
+    """
+    Compare original and masked models and save a qualitative analysis CSV.
+    """
     print(f"CREATING {output_name.upper()} ANALYSIS CSV")
 
 
@@ -117,7 +122,9 @@ def create_masked_analysis_csv(
 
 
 def analyze_features(train_df, test_df):
-
+    """
+    Train original and masked models and run qualitative feature analysis.
+    """
     print("QUALITATIVE ANALYSIS: Running models on samples")
 
     original_pipe = Pipeline([
@@ -184,5 +191,3 @@ def analyze_features(train_df, test_df):
 
     orig_preds = original_pipe.predict(test_df["text"])
     mask_preds = masked_pipe.predict(test_df[masked_text_col])
-
-    print("\nDONE.")
