@@ -1,96 +1,127 @@
-# Reddit Gender Classification - Clean Code Version
+# Reddit Gender Classification with Data Depollution
 
-**This is our notebook code cleaned up into separate Python files.**
+This repository contains the **fully reproducible code** for the paper:
 
-## Files (5 total)
+> *Unmasking Style: Evaluating Text Distortion for Data Depollution in Reddit Author Profiling*
 
-```
-config.py             - Settings (gender terms, file paths)
-prepare_data.py       - Load data, split by author, remove duplicates
-masking.py            - Mask gender terms and nouns
-train_models.py       - Train 3 models on 3 settings
-qualitative.py        - Feature analysis
-main.py               - Main script (runs everything)
-```
+The goal of this project is to **quantitatively and qualitatively evaluate data pollution** in Reddit-based gender prediction, and to assess whether **stylometric signals remain predictive after masking label-aligned and topical content**.
 
-## Setup
+---
+
+## Repository Structure
+
+config.py Global settings and constants
+
+prepare_data.py Data loading, author-disjoint splitting, deduplication
+
+masking.py Gender masking and POS-based noun masking
+
+train_models.py Model training and evaluation
+
+qualitative.py Feature importance and qualitative analysis
+
+main.py End-to-end experiment pipeline
+
+
+---
+
+## Requirements
+
+**Python:** 3.9+ (tested on Python 3.10)
+
+### Dependencies
 
 ```bash
 pip install pandas numpy scikit-learn spacy tqdm
 python -m spacy download en_core_web_sm
 ```
 
-## Run
+## Data
 
+- **Input file:** `gender.csv`
+- Each row corresponds to a **single Reddit post**
+- Add gender.csv to data directory
+
+Reproducing the Experiments
+
+Run the full pipeline with:
 ```bash
-python run_pipeline.py
+python main.py
 ```
+This should take a few hours to run as the POS tagging takes a while to use on the entire data set.
 
-That's it! Takes 5-10 minutes to run.
+The pipeline performs the following steps:
+1. Loads and cleans the data  
+2. Splits the data **by author** (no author overlap between train and test)  
+3. Applies masking strategies  
+4. Trains all models  
+5. Produces quantitative and qualitative outputs  
 
-## What Each File Does
+## Experimental Conditions
 
-### config.py
-- Gender terms list
-- File paths
-- Settings
+Each model is evaluated under **three preprocessing conditions**:
 
-### prepare_data.py
-```python
-load_data()              # Load gender.csv
-split_by_author()        # Split train/test by author
-remove_near_duplicates() # Clean test set
-```
+1. **Original text**
+2. **Gender-masked text**  
+   (explicit gender-related terms → `[LEAKAGE]`)
+3. **POS-masked text**  
+   (all nouns and proper nouns → `[CONTENT]`)
 
-### masking.py
-```python
-mask_leakage_only()  # Mask gender terms (he, she, etc.)
-mask_all_nouns()     # Mask all nouns
-apply_masking()      # Apply both strategies
-```
+### Models
+- Multinomial Naive Bayes  
+- Logistic Regression  
+- Linear Support Vector Machine  
 
-### train_models.py
-```python
-run_experiments()  # Train NB, LogReg, SVM on original/masked data
-```
+### Metrics
+- Accuracy  
+- Macro-F1  
 
-### qualitative.py
-```python
-analyze_features()  # Extract top features, generate tables
-```
+---
 
-### main.py
-```python
-main()  # Runs everything in order
-```
+## Output Files and Paper Mapping
 
-## Output Files
+| File                    | Description                              | 
+|-------------------------|------------------------------------------|
+| `results.csv`           | Accuracy and Macro-F1 scores              | 
+| `original_features.csv` | Top features learned on raw text          |
+| `masked_features.csv`   | Top features learned on masked text       | 
+| `feature_table.tex`     | LaTeX-ready feature table                 | 
 
-- `results.csv` - Accuracy and F1 scores
-- `original_features.csv` - What original model learned
-- `masked_features.csv` - What masked model learned  
-- `feature_table.tex` - LaTeX table for paper
+All reported results in the paper are **directly generated** by this codebase.
 
-## Understanding the Flow
+---
 
-```
-1. Load gender.csv
-   ↓
-2. Split by author (no overlap)
-   ↓
-3. Remove near-duplicates
-   ↓
-4. Create masked versions:
-   - text_leakage_masked (gender terms → [LEAKAGE])
-   - text_noun_masked (all nouns → [CONTENT])
-   ↓
-5. Train 3 models × 3 settings = 9 experiments
-   ↓
-6. Extract features and analyze
-```
+## Reproducibility Notes
 
-## Help
+- All experiments use a **fixed random seed** (defined in `config.py`)
+- Masking rules and feature selection are derived **only from training data**
+- No test data is used during preprocessing or analysis
 
-- **Can't find a function?** Check which file makes sense (data stuff in prepare_data.py, model stuff in train_models.py)
-- **Want to change settings?** Edit config.py
-- **Need to modify masking?** Edit masking.py
+Minor numerical differences (±0.5%) may occur due to differences in hardware or library versions.
+
+---
+
+## Modifying or Extending the Code
+
+- **Change masking rules:** edit `masking.py`
+- **Add or modify models:** extend `train_models.py`
+- **Experiment with different splits:** adjust `prepare_data.py`
+- **Change hyperparameters or paths:** update `config.py`
+
+The pipeline is modular and designed to support controlled extensions.
+
+---
+
+## Common Issues
+
+- **spaCy model not found**  
+  → Run `python -m spacy download en_core_web_sm`
+
+- **Results differ slightly from the paper**  
+  → Check the random seed and dataset version
+
+- **Slow runtime**  
+  → Disable POS masking for quick sanity checks
+
+
+
