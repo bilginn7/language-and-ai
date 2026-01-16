@@ -48,7 +48,7 @@ Run the full pipeline with:
 ```bash
 python main.py
 ```
-This should take a few hours to run as the POS tagging takes a while to use on the entire data set.
+This may take **several hours** to run due to POS tagging over the full dataset.
 
 The pipeline performs the following steps:
 1. Loads and cleans the data  
